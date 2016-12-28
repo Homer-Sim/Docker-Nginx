@@ -6,7 +6,7 @@ LE_WORKING_DIR=${LE_WORKING_DIR:-/letsencrypt}
 
 # Get SSL certs
 if [[ -n ${DOMAIN_NAME} ]]; then
-    pushd "${LE_WORKING_DIR}"
+    pushd "${LE_WORKING_DIR}" > /dev/null
 
     echo "nginx-configure: starting nginx to authenticate SSL certs"
     cp "${LE_WORKING_DIR}"/letsencrypt-nginx.conf /etc/nginx/conf.d/
@@ -26,7 +26,7 @@ if [[ -n ${DOMAIN_NAME} ]]; then
 
     echo "nginx-configure: stopping nginx"
     supervisorctl stop nginx
-    popd
+    popd > /dev/null
 fi
 
 # Build a list of location stanzas from the environment
