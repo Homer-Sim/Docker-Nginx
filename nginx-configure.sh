@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
 
-SSL_DIR=/etc/nginx/ssl
+SSL_DIR=${SSL_DIR:-/etc/nginx/ssl}
 LE_WORKING_DIR=${LE_WORKING_DIR:-/letsencrypt}
 
 # Get SSL certs
@@ -14,6 +14,7 @@ if [[ -n ${DOMAIN_NAME} ]]; then
 
     # Cert chain for stapling
     curl https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem -o "${LE_WORKING_DIR}"/lets-encrypt-x3-cross-signed.pem
+    mkdir --parents "${SSL_DIR}"
     ln --symbolic --force "${LE_WORKING_DIR}"/lets-encrypt-x3-cross-signed.pem "${SSL_DIR}"/chain.pem
 
     # Generate SSL certs for this server
