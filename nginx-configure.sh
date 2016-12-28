@@ -1,7 +1,33 @@
 #!/bin/bash
+set -eu
 
 SSL_DIR=/etc/nginx/ssl
 LE_WORKING_DIR=${LE_WORKING_DIR:-/letsencrypt}
+
+# Get SSL certs
+if [[ -n ${DOMAIN_NAME} ]]; then
+    echo "nginx-configure: starting nginx to authenticate SSL certs"
+    cp letsencrypt-nginx.conf /etc/nginx/conf.d/
+    supervisorctl start nginx
+
+    mkdir --parent "${LE_WORKING_DIR}"
+    pushd "${LE_WORKING_DIR}"
+
+    # Cert chain for stapling
+    curl https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem -o "${LE_WORKING_DIR}"/lets-encrypt-x3-cross-signed.pem
+    ln --symbolic --force "${LE_WORKING_DIR}"/lets-encrypt-x3-cross-signed.pem "${SSL_DIR}"/chain.pem
+
+    # Generate SSL certs for this server
+    echo "nginx-configure: Setting up SSL certificate"
+    ./acme.sh --issue -w /usr/share/nginx/html/ -d ${DOMAIN_NAME}
+
+    ln --symbolic --force "${LE_WORKING_DIR}"/${DOMAIN_NAME}/${DOMAIN_NAME}.cer "${SSL_DIR}"/nginx.cer
+    ln --symbolic --force "${LE_WORKING_DIR}"/${DOMAIN_NAME}/${DOMAIN_NAME}.key "${SSL_DIR}"/nginx.key
+
+    echo "nginx-configure: stopping nginx"
+    supervisorctl stop nginx
+    popd
+fi
 
 # Build a list of location stanzas from the environment
 locations=()
@@ -15,29 +41,13 @@ done
 IFS=$'\n'
 echo "nginx-configure: Writing new locations to nginx config:"
 echo "${locations[@]}"
-perl -pe 's#__LOCATIONS__#'"${locations[*]}"'#' template-nginx-proxy.conf > /etc/nginx/conf.d/proxy.conf
+perl -pe 's#__LOCATIONS__#'"${locations[*]}"'#' /nginx-configure/template-nginx-proxy.conf > /etc/nginx/conf.d/proxy.conf
 
 # Create dhparams.pem if necessary
 echo "nginx-configure: generating dhparams"
 mkdir --parents "${SSL_DIR}"
 export SSL_DIR
 "${LE_WORKING_DIR}"/generate-dhparams.sh
-
-# Get SSL certs
-if [[ -n ${DOMAIN_NAME} ]]; then
-    echo "nginx-configure: Setting up SSL certificate"
-    mkdir --parent "${LE_WORKING_DIR}"
-    cd "${LE_WORKING_DIR}"
-
-    # Cert chain for stapling
-    curl https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem -o "${LE_WORKING_DIR}"/lets-encrypt-x3-cross-signed.pem
-    ln --symbolic --force "${LE_WORKING_DIR}"/lets-encrypt-x3-cross-signed.pem "${SSL_DIR}"/chain.pem
-
-    # Generate SSL certs for this server
-    ./acme.sh --issue -w /usr/share/nginx/html/ -d ${DOMAIN_NAME}
-    ln --symbolic --force "${LE_WORKING_DIR}"/${DOMAIN_NAME}/${DOMAIN_NAME}.cer "${SSL_DIR}"/nginx.cer
-    ln --symbolic --force "${LE_WORKING_DIR}"/${DOMAIN_NAME}/${DOMAIN_NAME}.key "${SSL_DIR}"/nginx.key
-fi
 
 # Start nginx
 echo "nginx-configure: Starting nginx"
