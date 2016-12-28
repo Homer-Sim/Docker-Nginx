@@ -3,6 +3,7 @@ MAINTAINER Carl Seelye <cseelye@gmail.com>
 
 ENV LE_WORKING_DIR=/letsencrypt
 
+RUN [ "cross-build-start" ]
 RUN apt-get update && \
     apt-get install --assume-yes curl && \
     mkdir --parents "$LE_WORKING_DIR" && \
@@ -10,7 +11,6 @@ RUN apt-get update && \
     chmod 755 /tmp/acme.sh && \
     cd /tmp && \
     ./acme.sh install nocron
-
 COPY nginx-configure.sh template-nginx-proxy.conf /nginx-configure/
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
+RUN [ "cross-build-end" ]
