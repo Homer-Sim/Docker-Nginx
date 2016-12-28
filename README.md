@@ -11,10 +11,11 @@ For instance, to forward /services/service1 to http://service1host and /services
 
 service1host and service2host can be other containers running on the same docker network as this proxy. You can then expose port 443 of this proxy container on your host and reach both services over SSL.
 
-This container also includes automated TLS certificate requesting from letsencrypt.org. You must ahve a registered domain name, and to authenticate your domain letsencrypt requires you to write out a file into your webroot in a known location for letsencrypt.org to read.  The certificate request, authentication, and installation are all autoamted within this container.  The domain name you are using must have DNS set up to point to the container host and you must have port 80 open to the internet.  This container will serve the one exact path letsencrypt needs to authenticate unencrypted over port 80.
+This container also includes automated TLS certificate requesting from letsencrypt.org. You must have a registered domain name, and to authenticate your domain letsencrypt requires you to write out a file into your webroot in a known location for letsencrypt.org to read.  The certificate request, authentication, and installation are all automated within this container.  The domain name you are using must have DNS set up to point to the container host and you must have port 80 open to the internet.  This container will serve the one exact path letsencrypt needs to authenticate unencrypted over port 80.
 
 To use the letsencrypt TLS certifiacte process, set the DOMAIN_NAME env variable with your domain:  
-```--env DOMAIN_NAME=www.mydomain.com```
+```--env DOMAIN_NAME=www.mydomain.com```  
+Then make sure that you expose port 80 from the container, and your domain name forwards to your container host.  http://your-fqdn/.well_known/acme-challenge/* must be accessible from the internet and served from this container.
 
 On first startup, the container will generate a new dhparams.pem file, which will take a long time to run, ~12 minutes on my rpi 3.
 

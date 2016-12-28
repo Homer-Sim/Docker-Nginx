@@ -6,12 +6,11 @@ LE_WORKING_DIR=${LE_WORKING_DIR:-/letsencrypt}
 
 # Get SSL certs
 if [[ -n ${DOMAIN_NAME} ]]; then
-    echo "nginx-configure: starting nginx to authenticate SSL certs"
-    cp letsencrypt-nginx.conf /etc/nginx/conf.d/
-    supervisorctl start nginx
-
-    mkdir --parent "${LE_WORKING_DIR}"
     pushd "${LE_WORKING_DIR}"
+
+    echo "nginx-configure: starting nginx to authenticate SSL certs"
+    cp "${LE_WORKING_DIR}"/letsencrypt-nginx.conf /etc/nginx/conf.d/
+    supervisorctl start nginx
 
     # Cert chain for stapling
     curl https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem -o "${LE_WORKING_DIR}"/lets-encrypt-x3-cross-signed.pem
