@@ -11,7 +11,7 @@ RUN apt-get update && \
     chmod 755 /tmp/acme.sh && \
     cd /tmp && \
     ./acme.sh install nocron
-COPY generate-dhparams.sh letsencrypt-nginx.conf $LE_WORKING_DIR/generate-dhparams.sh
+COPY generate-dhparams.sh letsencrypt-nginx.conf $LE_WORKING_DIR/
 COPY nginx-configure.sh template-nginx-proxy.conf /nginx-configure/
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN [ "cross-build-end" ]
